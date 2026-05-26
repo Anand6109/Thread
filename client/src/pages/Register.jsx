@@ -54,6 +54,10 @@ const Register = () => {
         theme: "colored",
         transition: Bounce,
       });
+      // Wait a moment for the page to update with new auth state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
     if (signinUserData.isError) {
       toast.error(signinUserData.error.data.msg, {
@@ -81,6 +85,10 @@ const Register = () => {
         theme: "colored",
         transition: Bounce,
       });
+      // Wait a moment for the page to update with new auth state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
     if (loginUserData.isError) {
       toast.error(loginUserData.error.data.msg, {

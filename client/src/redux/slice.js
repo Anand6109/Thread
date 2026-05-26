@@ -32,6 +32,7 @@ export const serviceSlice = createSlice({
     },
     addMyInfo: (state, action) => {
       state.myInfo = action.payload.me;
+      // console.log(state.myInfo);
     },
     addUser: (state, action) => {
       state.user = action.payload;
@@ -57,7 +58,7 @@ export const serviceSlice = createSlice({
         return;
       }
       const existingPosts = [...state.allPosts];
-      newPostArr.forEach((e) => {
+      newPostArr.forEach((e) => { 
         const existingIndex = existingPosts.findIndex((i) => {
           return i._id === e._id;
         });
@@ -77,9 +78,12 @@ export const serviceSlice = createSlice({
     addPostId:(state,action)=>{
       state.postId = action.payload;
     },
-
+    
     addToSearchedUsers: (state, action) => {
       state.searchedUsers = action.payload;
+    },
+    clearMyInfo: (state) => {
+      state.myInfo = null;
     },
   },
 });
@@ -97,6 +101,7 @@ export const {
   addToAllPost,
   deleteThePost,
   addToSearchedUsers,
+  clearMyInfo,
 } = serviceSlice.actions;
 
 export default serviceSlice.reducer;

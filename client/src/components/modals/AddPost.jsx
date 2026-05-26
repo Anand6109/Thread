@@ -166,7 +166,7 @@ const AddPost = () => {
                     bgcolor: "GrayText",
                     color: "white",
                     borderRadius: "10px",
-                    ":hover": { bgcolor: "gray", cursor: "pointer" },
+                    ":hover": { bgcolor: "green", cursor: "pointer" },
                   }}
                   onClick={handlePost}
                 >

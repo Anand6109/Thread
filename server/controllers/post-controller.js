@@ -15,11 +15,12 @@ exports.addPost = async (req, res) => {
       const post = new Post();
       if (fields.text) {
         post.text = fields.text;
+        console.log({ text: fields.text });
       }
       if (files.media) {
         const uploadedImage = await cloudinary.uploader.upload(
           files.media.filepath,
-          { folder: "Threads_clone_youtube/Posts" }
+          { folder: "Threads_clone/Posts" }
         );
         if (!uploadedImage) {
           return res.status(400).json({ msg: "Error while uploading Image !" });

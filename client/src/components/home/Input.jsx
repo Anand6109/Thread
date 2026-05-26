@@ -33,7 +33,7 @@ const Input = () => {
           mx={"auto"}
           onClick={handleAddPost}
         >
-          <Stack flexDirection={"row"} alignItems={"center"} gap={2}>
+          <Stack flexDirection={"row"} alignItems={"center"} gap={2} >
             <Avatar
               src={myInfo ? myInfo.profilePic : ""}
               alt={myInfo ? myInfo.userName : ""}
@@ -46,12 +46,12 @@ const Input = () => {
               bgcolor: "gray",
               color: "aliceblue",
               ":hover": {
-                bgcolor: "black",
+                bgcolor: "green",
                 cursor: "pointer",
               },
             }}
           >
-            POST
+            POST 
           </Button>
         </Stack>
       ) : null}

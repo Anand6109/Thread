@@ -4,7 +4,7 @@ import { IoMenu } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleMainMenu } from "../../redux/slice";
 
-const Header = () => {
+const   Header = () => {
   const { darkMode } = useSelector((state) => state.service);
   const _700 = useMediaQuery("(min-width:700px)");
 

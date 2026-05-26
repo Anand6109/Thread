@@ -38,11 +38,11 @@ exports.signin = async (req, res) => {
       return res.status(400).json({ msg: "Error while generating token !" });
     }
     res.cookie("token", accesToken, {
-      maxAge: 1000 * 60 * 60 * 24 * 30,
+      maxAge: 1000 * 60 * 60,
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
-      partitioned: true,
+      sameSite: "lax",
+      secure: false,
+      // partitioned: true,
     });
     res
       .status(201)
@@ -78,9 +78,9 @@ exports.login = async (req, res) => {
     res.cookie("token", accessToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      partitioned: true,
+      secure: false,
+      sameSite: "lax",
+      // partitioned: true,
     });
     res.status(200).json({ msg: "User logged in succcessfully !" });
   } catch (err) {
@@ -215,13 +215,14 @@ exports.logout = async (req, res) => {
     res.cookie("token", "", {
       maxAge: 0,
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
-      partitioned: true,
+      sameSite: "lax",
+      secure: false,
+      // partitioned: true,
     });
 
-    res.status(201).json({ msg: "You logged out !" });
+    res.status(201).json({ msg: `You have been logged out! ${req.user.userName}` });
   } catch (err) {
+    
     res.status(400).json({ msg: "Error in logout" });
   }
 };

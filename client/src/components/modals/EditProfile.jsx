@@ -35,7 +35,9 @@ const EditProfile = () => {
   const dispatch = useDispatch();
 
   const [updateProfile, updateProfileData] = useUpdateProfileMutation();
-  const { refetch } = useUserDetailsQuery(params?.id);
+  const { refetch } = useUserDetailsQuery(params?.id, {
+    skip: !params?.id,
+  });
 
   const handlePhoto = () => {
     imgRef.current.click();

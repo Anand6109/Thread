@@ -1,7 +1,7 @@
 import { Menu, MenuItem } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { toggleColorMode, toggleMainMenu } from "../../redux/slice";
+import { toggleColorMode, toggleMainMenu, clearMyInfo } from "../../redux/slice";
 import { useLogoutMeMutation } from "../../redux/service";
 import { useEffect } from "react";
 import { Bounce, toast } from "react-toastify";
@@ -25,6 +25,7 @@ const MainMenu = () => {
   const handleLogout = async () => {
     handleClose();
     await logoutMe();
+    dispatch(clearMyInfo());
   };
 
   useEffect(() => {
@@ -65,8 +66,8 @@ const MainMenu = () => {
       >
         <MenuItem onClick={handleToggleTheme}>Toggle Theme</MenuItem>
         <Link to={`/profile/threads/${myInfo?._id}`} className="link">
-          <MenuItem>My Profile</MenuItem>
-        </Link>
+          <MenuItem>My Profile</MenuItem> 
+        </Link>   
         <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </Menu>
     </>

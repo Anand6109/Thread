@@ -19,11 +19,13 @@ import EditProfile from "../../../components/modals/EditProfile";
 import { Bounce, toast } from "react-toastify";
 import { Helmet } from "react-helmet-async";
 
-const ProfileLayout = () => {
+const   ProfileLayout = () => {
   const dispatch = useDispatch();
   const params = useParams();
 
-  const { data } = useUserDetailsQuery(params?.id);
+  const { data } = useUserDetailsQuery(params?.id, {
+    skip: !params?.id,
+  });
   const [followUser, followUserData] = useFollowUserMutation();
 
   const { darkMode, myInfo } = useSelector((state) => state.service);
@@ -102,8 +104,8 @@ const ProfileLayout = () => {
           {data
             ? data.user
               ? data.user.userName + " | Threads Clone"
-              : "Threads Clone | App by Aditya Jawanjal"
-            : "Threads Clone | App by Aditya Jawanjal"}
+              : "Threads Clone | App by Anand "
+            : "Threads Clone | App by Anand "}
         </title>
       </Helmet>
       <Stack

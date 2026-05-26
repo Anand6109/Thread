@@ -7,12 +7,25 @@ import {
   deleteThePost,
 } from "./slice";
 
+const baseQuery = fetchBaseQuery({
+  baseUrl: `${SERVER_URL}/api/`,
+  credentials: "include",
+});
+
+const customBaseQuery = async (args, api, extraOptions) => {
+  const result = await baseQuery(args, api, extraOptions);
+  
+  // Suppress 401 errors for /me endpoint after logout
+  if (result.error?.status === 401 && args.url === "me") {
+    return { data: null };
+  }
+  
+  return result;
+};
+
 export const serviceApi = createApi({
   reducerPath: "serviceApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${SERVER_URL}/api/`,
-    credentials: "include",
-  }),
+  baseQuery: customBaseQuery,
   keepUnusedDataFor: 60 * 60 * 24 * 7,
   tagTypes: ["Post", "User", "Me"],
   endpoints: (builder) => ({
@@ -30,7 +43,7 @@ export const serviceApi = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Me"],
+      invalidateTags: ["Me"],
     }),
     myInfo: builder.query({
       query: () => ({
@@ -41,7 +54,9 @@ export const serviceApi = createApi({
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          dispatch(addMyInfo(data));
+          if (data) {
+            dispatch(addMyInfo(data));
+          }
         } catch (err) {
           console.log(err);
         }
