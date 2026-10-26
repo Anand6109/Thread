@@ -69,7 +69,7 @@ const AddPost = () => {
       });
     }
     if (addNewPostData.isError) {
-     toast.error(addNewPostData.error.data.msg, {
+     toast.error(addNewPostData.error?.data?.msg || "Could not create this post.", {
        position: "top-center",
        autoClose: 2500,
        hideProgressBar: false,
@@ -80,7 +80,13 @@ const AddPost = () => {
        transition: Bounce,
      });
     }
-  }, [addNewPostData.isSuccess, addNewPostData.isError]);
+  }, [
+    addNewPostData.isSuccess,
+    addNewPostData.isError,
+    addNewPostData.data?.msg,
+    addNewPostData.error?.data?.msg,
+    dispatch,
+  ]);
 
   return (
     <>

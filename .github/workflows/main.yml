@@ -3,7 +3,12 @@ name: Thread Workflow
 on:
   push:
     branches:
-      - master
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   check-changes:
@@ -21,7 +26,10 @@ jobs:
         with:
           filters: |
             client:
-             - 'client/**'
+              - 'client/**'
+              - 'compose.yaml'
+              - 'nginx.conf'
+              - '.github/workflows/main.yml'
 
       - name: Check for changes in server
         id: server_changed
@@ -29,7 +37,10 @@ jobs:
         with:
           filters: |
             server:
-             - 'server/**'
+              - 'server/**'
+              - 'compose.yaml'
+              - 'nginx.conf'
+              - '.github/workflows/main.yml'
 
   client:
     needs: check-changes
@@ -39,33 +50,60 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Creating Docker Image
-        run: |
-          cd client
-          docker build -t meabhisingh/thread-client .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+          cache-dependency-path: client/package-lock.json
 
-      - name: Pushing Docker Image
+      - name: Install dependencies and lint
+        run: |
+          npm ci --prefix client
+          npm --prefix client run lint
+          VITE_SERVER_URL=https://api.example.invalid npm --prefix client run build
+
+      - name: Build Docker image
+        if: github.event_name == 'push'
+        env:
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+        run: |
+          test -n "$VITE_SERVER_URL" || { echo "::error::Set the VITE_SERVER_URL repository variable."; exit 1; }
+          docker build --build-arg "VITE_SERVER_URL=$VITE_SERVER_URL" -t meabhisingh/thread-client ./client
+
+      - name: Push Docker image
+        if: github.event_name == 'push'
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          printf '%s' "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
           docker push meabhisingh/thread-client
           docker logout
 
-      - name: SSH login and Deploy
+      - name: Configure deployment SSH
+        if: github.event_name == 'push'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY" || { echo "::error::Set the SSH_PRIVATE_KEY secret."; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo "::error::Set the SSH_KNOWN_HOSTS secret."; exit 1; }
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Deploy client
+        if: github.event_name == 'push'
         env:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          sudo apt-get update -y
-          sudo apt-get install sshpass
-          sudo sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST '
-          sudo docker pull meabhisingh/thread-client &&
-          cd /root/app &&
-          sudo docker compose up -d --no-deps --build client  && exit
-          '
+          test -n "$SSH_USERNAME" && test -n "$SSH_HOST" || { echo "::error::Set SSH_USERNAME and SSH_HOST secrets."; exit 1; }
+          ssh -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USERNAME@$SSH_HOST" \
+            'sudo docker pull meabhisingh/thread-client && cd /root/app && sudo docker compose up -d --no-deps client'
 
   server:
     needs: check-changes
@@ -75,30 +113,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Creating Docker Image
-        run: |
-          cd client
-          docker build -t meabhisingh/thread-server .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+          cache-dependency-path: server/package-lock.json
 
-      - name: Pushing Docker Image
+      - name: Install dependencies and run tests
+        run: |
+          npm ci --prefix server
+          npm --prefix server test
+          find server -path 'server/node_modules' -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check
+
+      - name: Build Docker image
+        if: github.event_name == 'push'
+        run: docker build -t meabhisingh/thread-server ./server
+
+      - name: Push Docker image
+        if: github.event_name == 'push'
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          printf '%s' "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
           docker push meabhisingh/thread-server
           docker logout
 
-      - name: SSH login and Deploy
+      - name: Configure deployment SSH
+        if: github.event_name == 'push'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY" || { echo "::error::Set the SSH_PRIVATE_KEY secret."; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo "::error::Set the SSH_KNOWN_HOSTS secret."; exit 1; }
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Deploy server
+        if: github.event_name == 'push'
         env:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          sudo apt-get update -y
-          sudo apt-get install sshpass
-          sudo sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST '
-          sudo docker pull meabhisingh/thread-server &&
-          cd /root/app &&
-          sudo docker compose up -d --no-deps --build server  && exit
-          '
+          test -n "$SSH_USERNAME" && test -n "$SSH_HOST" || { echo "::error::Set SSH_USERNAME and SSH_HOST secrets."; exit 1; }
+          ssh -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USERNAME@$SSH_HOST" \
+            'sudo docker pull meabhisingh/thread-server && cd /root/app && sudo docker compose up -d --no-deps server'

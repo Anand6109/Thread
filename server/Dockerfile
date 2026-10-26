@@ -1,11 +1,17 @@
-FROM node:20
+FROM node:20-bookworm-slim
 
-WORKDIR /usr/src/app
+ENV NODE_ENV=production
+WORKDIR /app
 
 COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
-RUN npm install
+COPY --chown=node:node . .
 
-COPY . .
+USER node
+EXPOSE 5000
 
-CMD [ "npm", "start" ]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:5000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+
+CMD ["node", "index.js"]

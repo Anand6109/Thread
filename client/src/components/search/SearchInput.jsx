@@ -36,7 +36,7 @@ const SearchInput = () => {
       });
     }
     if (searchUserData.isError) {
-      toast.success(searchUserData.error.data.msg, {
+      toast.error(searchUserData.error?.data?.msg || "Search failed.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -47,7 +47,14 @@ const SearchInput = () => {
         transition: Bounce,
       });
     }
-  }, [searchUserData.isSuccess, searchUserData.isError]);
+  }, [
+    searchUserData.isSuccess,
+    searchUserData.isError,
+    searchUserData.data?.msg,
+    searchUserData.data?.users,
+    searchUserData.error?.data?.msg,
+    dispatch,
+  ]);
 
   return (
     <>

@@ -1,17 +1,24 @@
 import { Box } from "@mui/material";
+import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Error from "./pages/Error";
-import Home from "./pages/Protected/Home";
-import ProfileLayout from "./pages/Protected/profile/ProfileLayout";
-import Replies from "./pages/Protected/profile/Replies";
-import Repost from "./pages/Protected/profile/Repost";
-import Threads from "./pages/Protected/profile/Threads";
-import ProtectedLayout from "./pages/Protected/ProtectedLayout";
-import Search from "./pages/Protected/Search";
+import Loading from "./components/common/Loading";
 import Register from "./pages/Register";
-import SinglePost from "./pages/Protected/SinglePost";
 import { useMyInfoQuery } from "./redux/service";
+
+const Error = lazy(() => import("./pages/Error"));
+const Home = lazy(() => import("./pages/Protected/Home"));
+const ProfileLayout = lazy(
+  () => import("./pages/Protected/profile/ProfileLayout")
+);
+const Replies = lazy(() => import("./pages/Protected/profile/Replies"));
+const Repost = lazy(() => import("./pages/Protected/profile/Repost"));
+const Threads = lazy(() => import("./pages/Protected/profile/Threads"));
+const ProtectedLayout = lazy(
+  () => import("./pages/Protected/ProtectedLayout")
+);
+const Search = lazy(() => import("./pages/Protected/Search"));
+const SinglePost = lazy(() => import("./pages/Protected/SinglePost"));
 
 const App = () => {
   const { darkMode } = useSelector((state) => state.service);
@@ -31,19 +38,21 @@ const App = () => {
     <>
       <Box minHeight={"100vh"} className={darkMode ? "mode" : ""}>
         <BrowserRouter>
-          <Routes>
-            <Route exact path="/" element={<ProtectedLayout />}>
-              <Route exact path="" element={<Home />} />
-              <Route exact path="post/:id" element={<SinglePost />} />
-              <Route exact path="search" element={<Search />} />
-              <Route exact path="profile" element={<ProfileLayout />}>
-                <Route exact path="threads/:id" element={<Threads />} />
-                <Route exact path="replies/:id" element={<Replies />} />
-                <Route exact path="reposts/:id" element={<Repost />} />
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route exact path="/" element={<ProtectedLayout />}>
+                <Route exact path="" element={<Home />} />
+                <Route exact path="post/:id" element={<SinglePost />} />
+                <Route exact path="search" element={<Search />} />
+                <Route exact path="profile" element={<ProfileLayout />}>
+                  <Route exact path="threads/:id" element={<Threads />} />
+                  <Route exact path="replies/:id" element={<Replies />} />
+                  <Route exact path="reposts/:id" element={<Repost />} />
+                </Route>
               </Route>
-            </Route>
-            <Route exact path="*" element={<Error />} />
-          </Routes>
+              <Route exact path="*" element={<Error />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </Box>
     </>

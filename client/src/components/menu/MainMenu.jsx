@@ -42,7 +42,7 @@ const MainMenu = () => {
       });
     }
     if (logoutMeData.isError) {
-      toast.error(logoutMeData.error.data.msg, {
+      toast.error(logoutMeData.error?.data?.msg || "Could not log out.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -53,7 +53,12 @@ const MainMenu = () => {
         transition: Bounce,
       });
     }
-  }, [logoutMeData.isSuccess, logoutMeData.isError]);
+  }, [
+    logoutMeData.isSuccess,
+    logoutMeData.isError,
+    logoutMeData.data?.msg,
+    logoutMeData.error?.data?.msg,
+  ]);
 
   return (
     <>

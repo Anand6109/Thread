@@ -1,10 +1,13 @@
 import {
   Button,
+  IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { useLoginMutation, useSigninMutation } from "../redux/service";
 import { Bounce, toast } from "react-toastify";
@@ -20,6 +23,7 @@ const Register = () => {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const toggleLogin = () => {
     setLogin((pre) => !pre);
@@ -59,7 +63,7 @@ const Register = () => {
       }, 1500);
     }
     if (signinUserData.isError) {
-      toast.error(signinUserData.error.data.msg, {
+      toast.error(signinUserData.error?.data?.msg || "Could not create your account.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -70,7 +74,12 @@ const Register = () => {
         transition: Bounce,
       });
     }
-  }, [signinUserData.isSuccess, signinUserData.isError]);
+  }, [
+    signinUserData.isSuccess,
+    signinUserData.isError,
+    signinUserData.data?.msg,
+    signinUserData.error?.data?.msg,
+  ]);
 
   useEffect(() => {
     if (loginUserData.isSuccess) {
@@ -89,7 +98,7 @@ const Register = () => {
       }, 1500);
     }
     if (loginUserData.isError) {
-      toast.error(loginUserData.error.data.msg, {
+      toast.error(loginUserData.error?.data?.msg || "Could not sign in.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -100,7 +109,12 @@ const Register = () => {
         transition: Bounce,
       });
     }
-  }, [loginUserData.isSuccess, loginUserData.isError]);
+  }, [
+    loginUserData.isSuccess,
+    loginUserData.isError,
+    loginUserData.data?.msg,
+    loginUserData.error?.data?.msg,
+  ]);
 
   if (signinUserData.isLoading || loginUserData.isLoading) {
     return (
@@ -158,6 +172,23 @@ const Register = () => {
             variant="outlined"
             placeholder="Enter your Password..."
             onChange={(e) => setPassword(e.target.value)}
+            type={showPassword ? "text" : "password"}
+            autoComplete={login ? "current-password" : "new-password"}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    edge="end"
+                    type="button"
+                  >
+                    {showPassword ? <IoEyeOffOutline /> : <IoEyeOutline />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             size="large"

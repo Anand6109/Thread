@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     bio: {
       type: String,
@@ -29,9 +30,10 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
-    pendingFollowRequests: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "user" },
-    ],
+    pendingFollowRequests: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+      select: false,
+    },
     threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],
     replies: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
     reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],

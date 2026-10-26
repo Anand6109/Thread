@@ -4,12 +4,11 @@ import PostOne from "./post/PostOne";
 import PostTwo from "./post/PostTwo";
 import { useDispatch, useSelector } from "react-redux";
 import { addPostId, toggleMyMenu } from "../../redux/slice";
-import { useEffect, useState } from "react";
 
 const Post = ({ e }) => {
   const { darkMode, myInfo } = useSelector((state) => state.service);
 
-  const [isAdmin, setIsAdmin] = useState();
+  const isAdmin = Boolean(myInfo?._id && e?.admin?._id === myInfo._id);
 
   const _300 = useMediaQuery("(min-width:300px)");
   const _400 = useMediaQuery("(min-width:400px)");
@@ -21,20 +20,6 @@ const Post = ({ e }) => {
     dispatch(addPostId(e._id));
     dispatch(toggleMyMenu(event.currentTarget));
   };
-
-  const checkIsAdmin = () => {
-    if (e?.admin._id === myInfo._id) {
-      setIsAdmin(true);
-      return;
-    }
-    setIsAdmin(false);
-  };
-
-  useEffect(() => {
-    if (e && myInfo) {
-      checkIsAdmin();
-    }
-  }, [e, myInfo]);
 
   return (
     <>

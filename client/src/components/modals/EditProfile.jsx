@@ -76,7 +76,7 @@ const EditProfile = () => {
       });
     }
     if (updateProfileData.isError) {
-      toast.error(updateProfileData.error.data.msg, {
+      toast.error(updateProfileData.error?.data?.msg || "Could not update your profile.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -87,7 +87,13 @@ const EditProfile = () => {
         transition: Bounce,
       });
     }
-  }, [updateProfileData.isError, updateProfileData.isSuccess]);
+  }, [
+    updateProfileData.isError,
+    updateProfileData.isSuccess,
+    updateProfileData.data?.msg,
+    updateProfileData.error?.data?.msg,
+    refetch,
+  ]);
 
   return (
     <>

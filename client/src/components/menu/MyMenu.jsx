@@ -35,7 +35,7 @@ const MyMenu = () => {
       });
     }
     if (deletePostData.isError) {
-      toast.error(deletePostData.error.data.msg, {
+      toast.error(deletePostData.error?.data?.msg || "Could not delete this post.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -46,7 +46,12 @@ const MyMenu = () => {
         transition: Bounce,
       });
     }
-  }, [deletePostData.isSuccess, deletePostData.isError]);
+  }, [
+    deletePostData.isSuccess,
+    deletePostData.isError,
+    deletePostData.data?.msg,
+    deletePostData.error?.data?.msg,
+  ]);
 
   return (
     <>

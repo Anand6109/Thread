@@ -14,7 +14,7 @@ import {
   useFollowUserMutation,
   useUserDetailsQuery,
 } from "../../../redux/service";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import EditProfile from "../../../components/modals/EditProfile";
 import { Bounce, toast } from "react-toastify";
 import { Helmet } from "react-helmet-async";
@@ -30,22 +30,13 @@ const   ProfileLayout = () => {
 
   const { darkMode, myInfo } = useSelector((state) => state.service);
 
-  const [myAccount, setMyAccount] = useState();
-  const isFollowing = Boolean(
-    data?.user?.followers?.some((follower) => follower._id === myInfo?._id)
-  );
+  const myAccount = Boolean(data?.user && data.user._id === myInfo?._id);
+  const isFollowing = Boolean(data?.user?.isFollowing);
   const isRequestPending = Boolean(data?.user?.isFollowRequestPending);
 
   const _300 = useMediaQuery("(min-width:300px)");
   const _500 = useMediaQuery("(min-width:500px)");
   const _700 = useMediaQuery("(min-width:700px)");
-
-  const checkIsMyAccount = () => {
-    if (data && myInfo) {
-      const isTrue = data.user._id === myInfo._id;
-      setMyAccount(isTrue);
-    }
-  };
 
   const handleFollow = async () => {
     if (data) {
@@ -71,7 +62,7 @@ const   ProfileLayout = () => {
       });
     }
     if (followUserData.isError) {
-      toast.error(followUserData.error.data.msg, {
+      toast.error(followUserData.error?.data?.msg || "Could not update follow status.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -82,11 +73,12 @@ const   ProfileLayout = () => {
         transition: Bounce,
       });
     }
-  }, [followUserData.isSuccess, followUserData.isError]);
-
-  useEffect(() => {
-    checkIsMyAccount();
-  }, [data]);
+  }, [
+    followUserData.isSuccess,
+    followUserData.isError,
+    followUserData.data?.msg,
+    followUserData.error?.data?.msg,
+  ]);
 
   return (
     <>
@@ -122,7 +114,7 @@ const   ProfileLayout = () => {
             </Typography>
             <Stack flexDirection={"row"} alignItems={"center"} gap={1}>
               <Typography variant="h2" fontSize={_300 ? "1rem" : "0.8rem"}>
-                {data ? (data.user ? data.user.email : "") : ""}
+                {data?.user ? `@${data.user.userName}` : ""}
               </Typography>
               <Chip
                 label="threads.net"
@@ -148,8 +140,8 @@ const   ProfileLayout = () => {
           <Typography variant="subtitle2" color={"gray"}>
             {data
               ? data.user
-                ? data.user.followers.length > 0
-                  ? `${data.user.followers.length} followers`
+                ? data.user.followersCount > 0
+                  ? `${data.user.followersCount} followers`
                   : "No Followers"
                 : ""
               : ""}

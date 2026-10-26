@@ -1,4 +1,5 @@
 const express = require("express");
+const { rateLimit } = require("express-rate-limit");
 const {
   signin,
   login,
@@ -27,9 +28,23 @@ const {
 } = require("./controllers/comment-controller");
 
 const router = express.Router();
+const authenticationRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many authentication attempts; try again later !" },
+});
+const searchRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { msg: "Too many searches; try again later !" },
+});
 
-router.post("/signin", signin);
-router.post("/login", login);
+router.post("/signin", authenticationRateLimit, signin);
+router.post("/login", authenticationRateLimit, login);
 
 router.get("/user/:id", auth, userDetails);
 router.put("/user/follow/:id", auth, followUser);
@@ -37,7 +52,7 @@ router.get("/follow-requests", auth, pendingFollowRequests);
 router.put("/follow-requests/:id/accept", auth, acceptFollowRequest);
 router.delete("/follow-requests/:id", auth, rejectFollowRequest);
 router.put("/update", auth, updateProfile);
-router.get("/users/search/:query", auth, searchUser);
+router.get("/users/search/:query", auth, searchRateLimit, searchUser);
 router.post("/logout", auth, logout);
 router.get("/me", auth, myInfo);
 

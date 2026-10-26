@@ -4,7 +4,7 @@ import { IoMdSend } from "react-icons/io";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useLikePostMutation, useRepostMutation } from "../../../redux/service";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Bounce, toast } from "react-toastify";
 
 const PostTwo = ({ e }) => {
@@ -13,7 +13,9 @@ const PostTwo = ({ e }) => {
   const [likePost] = useLikePostMutation();
   const [repost, repostData] = useRepostMutation();
 
-  const [isLiked, setIsLiked] = useState();
+  const isLiked = Boolean(
+    e?.likes?.some((like) => like._id === myInfo?._id)
+  );
 
   const _300 = useMediaQuery("(min-width:300px)");
   const _400 = useMediaQuery("(min-width:400px)");
@@ -24,24 +26,9 @@ const PostTwo = ({ e }) => {
     await likePost(e?._id);
   };
 
-  const checkIsLiked = () => {
-    if (e?.likes.length > 0) {
-      const variable = e.likes.filter((ele) => ele._id === myInfo._id);
-      if (variable.length > 0) {
-        setIsLiked(true);
-        return;
-      }
-    }
-    setIsLiked(false);
-  };
-
   const handleRepost = async () => {
     await repost(e?._id);
   };
-
-  useEffect(() => {
-    checkIsLiked();
-  }, [e]);
 
   useEffect(() => {
     if (repostData.isSuccess) {
@@ -57,7 +44,7 @@ const PostTwo = ({ e }) => {
       });
     }
     if (repostData.isError) {
-      toast.success(repostData.error.data.msg, {
+      toast.error(repostData.error?.data?.msg || "Could not repost this post.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -68,7 +55,12 @@ const PostTwo = ({ e }) => {
         transition: Bounce,
       });
     }
-  }, [repostData.isSuccess, repostData.isError]);
+  }, [
+    repostData.isSuccess,
+    repostData.isError,
+    repostData.data?.msg,
+    repostData.error?.data?.msg,
+  ]);
 
   return (
     <>

@@ -14,13 +14,12 @@ import {
   useSinglePostQuery,
 } from "../../../redux/service";
 import { Bounce, toast } from "react-toastify";
-import { FaBedPulse } from "react-icons/fa6";
 
 const Comments = ({ e, postId }) => {
   const { darkMode, myInfo } = useSelector((state) => state.service);
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const [isAdmin, setIsAdmin] = useState();
+  const isAdmin = Boolean(myInfo?._id && e?.admin?._id === myInfo._id);
 
   const _700 = useMediaQuery("(min-width:700px)");
 
@@ -41,20 +40,6 @@ const Comments = ({ e, postId }) => {
     refetch();
   };
 
-  const checkIsAdmin = () => {
-    if (e && myInfo) {
-      if (e.admin._id === myInfo._id) {
-        setIsAdmin(true);
-        return;
-      }
-    }
-    setIsAdmin(false);
-  };
-
-  useEffect(() => {
-    checkIsAdmin();
-  }, []);
-
   useEffect(() => {
     if (deleteCommentData.isSuccess) {
       toast.success(deleteCommentData.data.msg, {
@@ -69,7 +54,7 @@ const Comments = ({ e, postId }) => {
       });
     }
     if (deleteCommentData.isError) {
-      toast.error(deleteCommentData.error.data.msg, {
+      toast.error(deleteCommentData.error?.data?.msg || "Could not delete this comment.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -80,7 +65,12 @@ const Comments = ({ e, postId }) => {
         transition: Bounce,
       });
     }
-  }, [deleteCommentData.isSuccess, deleteCommentData.isError]);
+  }, [
+    deleteCommentData.isSuccess,
+    deleteCommentData.isError,
+    deleteCommentData.data?.msg,
+    deleteCommentData.error?.data?.msg,
+  ]);
 
   return (
     <>
