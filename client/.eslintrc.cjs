@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  global: {
+  globals: {
     SERVER_URL: "readonly",
   },
   env: { browser: true, es2020: true },
@@ -15,6 +15,7 @@ module.exports = {
   settings: { react: { version: "18.2" } },
   plugins: ["react-refresh"],
   rules: {
+    "react/prop-types": "off",
     "react/jsx-no-target-blank": "off",
     "react-refresh/only-export-components": [
       "warn",

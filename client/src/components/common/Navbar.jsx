@@ -15,10 +15,10 @@ import { TbEdit } from "react-icons/tb";
 import { CiHeart } from "react-icons/ci";
 import { RxAvatar } from "react-icons/rx";
 import { FiArrowLeft } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addPostModal } from "../../redux/slice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   useAcceptFollowRequestMutation,
   useFollowRequestsQuery,
@@ -34,9 +34,10 @@ const Navbar = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [showArrow, setShowArrow] = useState(false);
   const [requestsAnchor, setRequestsAnchor] = useState(null);
+  const showArrow = location.pathname.includes("/post/") && _700;
   const {
     data: followRequestsData,
     isLoading: requestsLoading,
@@ -50,14 +51,6 @@ const Navbar = () => {
   const requests = followRequestsData?.requests || [];
   const requestActionLoading =
     acceptRequestData.isLoading || rejectRequestData.isLoading;
-
-  const checkArrow = () => {
-    if (window.location.pathname.includes("/post/") && _700) {
-      setShowArrow(true);
-      return;
-    }
-    setShowArrow(false);
-  };
 
   const handleAddPost = () => {
     dispatch(addPostModal(true));
@@ -82,10 +75,6 @@ const Navbar = () => {
       );
     }
   };
-
-  useEffect(() => {
-    checkArrow();
-  }, [window.location.pathname]);
 
   return (
     <>

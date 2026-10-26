@@ -46,7 +46,7 @@ const ProfileBar = ({ e }) => {
               {e ? e.bio : ""}
             </Typography>
             <Typography variant="caption" fontSize={_700 ? "1rem" : "0.9rem"}>
-              {e ? e.followers.length : 0} followers
+              {e?.followersCount ?? 0} followers
             </Typography>
           </Stack>
         </Stack>

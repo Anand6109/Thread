@@ -70,7 +70,7 @@ export const serviceSlice = createSlice({
       });
       state.allPosts = existingPosts;
     },
-    deleteThePost: (state, action) => {
+    deleteThePost: (state) => {
       let postArr = [...state.allPosts];
       let newArr = postArr.filter((e) => e._id !== state.postId);
       state.allPosts = newArr;

@@ -26,7 +26,7 @@ const SinglePost = () => {
 
   useEffect(() => {
     if (addCommentData.isSuccess) {
-      setComment();
+      setComment("");
       refetch();
       toast.success(addCommentData.data.msg, {
         position: "top-center",
@@ -40,7 +40,7 @@ const SinglePost = () => {
       });
     }
     if (addCommentData.isError) {
-      toast.error(addCommentData.error.data.msg, {
+      toast.error(addCommentData.error?.data?.msg || "Could not add your comment.", {
         position: "top-center",
         autoClose: 2500,
         hideProgressBar: false,
@@ -51,7 +51,13 @@ const SinglePost = () => {
         transition: Bounce,
       });
     }
-  }, [addCommentData.isSuccess, addCommentData.isError]);
+  }, [
+    addCommentData.isSuccess,
+    addCommentData.isError,
+    addCommentData.data?.msg,
+    addCommentData.error?.data?.msg,
+    refetch,
+  ]);
 
   return (
     <>
