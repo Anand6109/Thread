@@ -31,22 +31,14 @@ const   ProfileLayout = () => {
   const { darkMode, myInfo } = useSelector((state) => state.service);
 
   const [myAccount, setMyAccount] = useState();
-  const [isFollowing, setIsFollowing] = useState();
+  const isFollowing = Boolean(
+    data?.user?.followers?.some((follower) => follower._id === myInfo?._id)
+  );
+  const isRequestPending = Boolean(data?.user?.isFollowRequestPending);
 
   const _300 = useMediaQuery("(min-width:300px)");
   const _500 = useMediaQuery("(min-width:500px)");
   const _700 = useMediaQuery("(min-width:700px)");
-
-  const checkIsFollowing = () => {
-    if (data && myInfo) {
-      const isTrue = data.user.followers.filter((e) => e._id === myInfo._id);
-      if (isTrue.length > 0) {
-        setIsFollowing(true);
-        return;
-      }
-      setIsFollowing(false);
-    }
-  };
 
   const checkIsMyAccount = () => {
     if (data && myInfo) {
@@ -93,7 +85,6 @@ const   ProfileLayout = () => {
   }, [followUserData.isSuccess, followUserData.isError]);
 
   useEffect(() => {
-    checkIsFollowing();
     checkIsMyAccount();
   }, [data]);
 
@@ -179,9 +170,16 @@ const   ProfileLayout = () => {
             cursor: "pointer",
           },
         }}
+        disabled={!myAccount && followUserData.isLoading}
         onClick={myAccount ? handleOpenEditModal : handleFollow}
       >
-        {myAccount ? " Edit Profile" : isFollowing ? "unfollow" : "Follow user"}
+        {myAccount
+          ? " Edit Profile"
+          : isRequestPending
+            ? "Requested"
+            : isFollowing
+              ? "Unfollow"
+              : "Follow user"}
       </Button>
       <Stack
         flexDirection={"row"}

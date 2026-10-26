@@ -8,7 +8,7 @@ import {
 } from "./slice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${SERVER_URL}/api/`,
+  baseUrl: `${import.meta.env.VITE_SERVER_URL || "http://localhost:5000"}/api/`,
   credentials: "include",
 });
 
@@ -27,7 +27,7 @@ export const serviceApi = createApi({
   reducerPath: "serviceApi",
   baseQuery: customBaseQuery,
   keepUnusedDataFor: 60 * 60 * 24 * 7,
-  tagTypes: ["Post", "User", "Me"],
+  tagTypes: ["Post", "User", "Me", "FollowRequests"],
   endpoints: (builder) => ({
     signin: builder.mutation({
       query: (data) => ({
@@ -95,7 +95,65 @@ export const serviceApi = createApi({
         url: `user/follow/${id}`,
         method: "PUT",
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "User", id }],
+      invalidatesTags: ["User"],
+    }),
+    followRequests: builder.query({
+      query: () => ({
+        url: "follow-requests",
+        method: "GET",
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.requests.map(({ _id }) => ({
+                type: "FollowRequests",
+                id: _id,
+              })),
+              { type: "FollowRequests", id: "LIST" },
+            ]
+          : [{ type: "FollowRequests", id: "LIST" }],
+    }),
+    acceptFollowRequest: builder.mutation({
+      query: (id) => ({
+        url: `follow-requests/${id}/accept`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["FollowRequests", "User"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          serviceApi.util.updateQueryData("followRequests", undefined, (draft) => {
+            draft.requests = draft.requests.filter(
+              (request) => request._id !== id
+            );
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+    rejectFollowRequest: builder.mutation({
+      query: (id) => ({
+        url: `follow-requests/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["FollowRequests", "User"],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          serviceApi.util.updateQueryData("followRequests", undefined, (draft) => {
+            draft.requests = draft.requests.filter(
+              (request) => request._id !== id
+            );
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
     }),
     updateProfile: builder.mutation({
       query: (data) => ({
@@ -209,6 +267,9 @@ export const {
   useLazySearchUsersQuery,
   useAllPostQuery,
   useFollowUserMutation,
+  useFollowRequestsQuery,
+  useAcceptFollowRequestMutation,
+  useRejectFollowRequestMutation,
   useAddCommentMutation,
   useAddPostMutation,
   useDeleteCommentMutation,

@@ -29,6 +29,9 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+    pendingFollowRequests: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+    ],
     threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],
     replies: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
     reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: "post" }],

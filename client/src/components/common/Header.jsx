@@ -1,8 +1,9 @@
-import { Grid, Stack, useMediaQuery } from "@mui/material";
+import { Box, Grid, Stack, useMediaQuery } from "@mui/material";
 import Navbar from "./Navbar";
 import { IoMenu } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleMainMenu } from "../../redux/slice";
+import { Link } from "react-router-dom";
 
 const   Header = () => {
   const { darkMode } = useSelector((state) => state.service);
@@ -26,21 +27,36 @@ const   Header = () => {
           top={0}
           py={1}
         >
-          {darkMode ? (
-            <img
-              src="/Threads-logo-black-bg.webp"
-              alt="logo"
-              width={60}
-              height={50}
-            />
-          ) : (
-            <img
-              src="/Threads-logo-white-bg.png"
-              alt="logo"
-              width={60}
-              height={35}
-            />
-          )}
+          <Box
+            component={Link}
+            to="/"
+            aria-label="Go to home"
+            sx={{
+              display: "inline-flex",
+              cursor: "pointer",
+              "&:focus-visible": {
+                outline: "2px solid currentColor",
+                outlineOffset: "3px",
+                borderRadius: "4px",
+              },
+            }}
+          >
+            {darkMode ? (
+              <img
+                src="/Threads-logo-black-bg.webp"
+                alt=""
+                width={60}
+                height={50}
+              />
+            ) : (
+              <img
+                src="/Threads-logo-white-bg.png"
+                alt=""
+                width={60}
+                height={35}
+              />
+            )}
+          </Box>
           <Stack
             justifyContent={"center"}
             width={"550px"}
@@ -79,12 +95,27 @@ const   Header = () => {
             p={1}
           >
             <Grid item xs={6}>
-              <img
-                src="/Threads-logo-white-bg.png"
-                alt="logo"
-                width={60}
-                height={35}
-              />
+              <Box
+                component={Link}
+                to="/"
+                aria-label="Go to home"
+                sx={{
+                  display: "inline-flex",
+                  cursor: "pointer",
+                  "&:focus-visible": {
+                    outline: "2px solid currentColor",
+                    outlineOffset: "3px",
+                    borderRadius: "4px",
+                  },
+                }}
+              >
+                <img
+                  src="/Threads-logo-white-bg.png"
+                  alt=""
+                  width={60}
+                  height={35}
+                />
+              </Box>
             </Grid>
             <IoMenu size={36} className="image-icon" color="gray" />
           </Grid>

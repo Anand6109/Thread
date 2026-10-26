@@ -4,6 +4,9 @@ const {
   login,
   userDetails,
   followUser,
+  pendingFollowRequests,
+  acceptFollowRequest,
+  rejectFollowRequest,
   updateProfile,
   searchUser,
   logout,
@@ -30,6 +33,9 @@ router.post("/login", login);
 
 router.get("/user/:id", auth, userDetails);
 router.put("/user/follow/:id", auth, followUser);
+router.get("/follow-requests", auth, pendingFollowRequests);
+router.put("/follow-requests/:id/accept", auth, acceptFollowRequest);
+router.delete("/follow-requests/:id", auth, rejectFollowRequest);
 router.put("/update", auth, updateProfile);
 router.get("/users/search/:query", auth, searchUser);
 router.post("/logout", auth, logout);

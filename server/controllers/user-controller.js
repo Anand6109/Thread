@@ -1,4 +1,5 @@
 const User = require("../models/user-model");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const formidable = require("formidable");
@@ -106,7 +107,15 @@ exports.userDetails = async (req, res) => {
         path: "reposts",
         populate: [{ path: "likes" }, { path: "comments" }, { path: "admin" }],
       });
-    res.status(200).json({ msg: "User Details Fetched !", user });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found !" });
+    }
+    const userData = user.toObject();
+    userData.isFollowRequestPending = user.pendingFollowRequests?.some(
+      (requesterId) => requesterId.toString() === req.user._id.toString()
+    ) || false;
+    delete userData.pendingFollowRequests;
+    res.status(200).json({ msg: "User Details Fetched !", user: userData });
   } catch (err) {
     res.status(400).json({ msg: "Error in userDetails !", err: err.message });
   }
@@ -115,33 +124,131 @@ exports.userDetails = async (req, res) => {
 exports.followUser = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ msg: "Id is required !" });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ msg: "A valid user id is required !" });
     }
-    const userExists = await User.findById(id);
-    if (!userExists) {
-      return res.status(400).json({ msg: "User don`t Exist !" });
+    if (id === req.user._id.toString()) {
+      return res.status(400).json({ msg: "You cannot follow yourself !" });
     }
-    if (userExists.followers.includes(req.user._id)) {
-      await User.findByIdAndUpdate(
-        userExists._id,
-        {
-          $pull: { followers: req.user._id },
-        },
-        { new: true }
-      );
-      return res.status(201).json({ msg: `Unfollowed ${userExists.userName}` });
+
+    const existingFollow = await User.findOneAndUpdate(
+      { _id: id, followers: req.user._id },
+      { $pull: { followers: req.user._id } },
+      { new: true }
+    );
+    if (existingFollow) {
+      return res.status(200).json({ msg: `Unfollowed ${existingFollow.userName}` });
     }
-    await User.findByIdAndUpdate(
-      userExists._id,
+
+    const existingRequest = await User.findOneAndUpdate(
+      { _id: id, pendingFollowRequests: req.user._id },
+      { $pull: { pendingFollowRequests: req.user._id } },
+      { new: true }
+    );
+    if (existingRequest) {
+      return res.status(200).json({ msg: "Follow request cancelled !" });
+    }
+
+    const request = await User.findOneAndUpdate(
       {
-        $push: { followers: req.user._id },
+        _id: id,
+        followers: { $ne: req.user._id },
+        pendingFollowRequests: { $ne: req.user._id },
+      },
+      { $addToSet: { pendingFollowRequests: req.user._id } },
+      { new: true }
+    );
+    if (!request) {
+      const userExists = await User.exists({ _id: id });
+      if (!userExists) {
+        return res.status(404).json({ msg: "User not found !" });
+      }
+      return res.status(409).json({ msg: "Follow request is already processed !" });
+    }
+    return res.status(201).json({ msg: `Follow request sent to ${request.userName}` });
+  } catch (err) {
+    res.status(500).json({ msg: "Error in followUser !", err: err.message });
+  }
+};
+
+exports.pendingFollowRequests = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select("pendingFollowRequests")
+      .populate({
+        path: "pendingFollowRequests",
+        select: "userName profilePic bio",
+      });
+    if (!user) {
+      return res.status(404).json({ msg: "User not found !" });
+    }
+    res.status(200).json({
+      requests: user.pendingFollowRequests.filter(Boolean),
+    });
+  } catch (err) {
+    res.status(500).json({
+      msg: "Error fetching follow requests !",
+      err: err.message,
+    });
+  }
+};
+
+exports.acceptFollowRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ msg: "A valid user id is required !" });
+    }
+    if (id === req.user._id.toString()) {
+      return res.status(400).json({ msg: "You cannot accept your own request !" });
+    }
+
+    const recipient = await User.findOneAndUpdate(
+      { _id: req.user._id, pendingFollowRequests: id },
+      {
+        $pull: { pendingFollowRequests: id },
+        $addToSet: { followers: id },
       },
       { new: true }
     );
-    return res.status(201).json({ msg: `Following ${userExists.userName}` });
+    if (!recipient) {
+      return res.status(404).json({ msg: "Pending follow request not found !" });
+    }
+
+    res.status(200).json({ msg: "Follow request accepted !", requesterId: id });
   } catch (err) {
-    res.status(400).json({ msg: "Error in followUser !", err: err.message });
+    res.status(500).json({
+      msg: "Error accepting follow request !",
+      err: err.message,
+    });
+  }
+};
+
+exports.rejectFollowRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ msg: "A valid user id is required !" });
+    }
+    if (id === req.user._id.toString()) {
+      return res.status(400).json({ msg: "You cannot reject your own request !" });
+    }
+
+    const recipient = await User.findOneAndUpdate(
+      { _id: req.user._id, pendingFollowRequests: id },
+      { $pull: { pendingFollowRequests: id } },
+      { new: true }
+    );
+    if (!recipient) {
+      return res.status(404).json({ msg: "Pending follow request not found !" });
+    }
+
+    res.status(200).json({ msg: "Follow request rejected !", requesterId: id });
+  } catch (err) {
+    res.status(500).json({
+      msg: "Error rejecting follow request !",
+      err: err.message,
+    });
   }
 };
 
@@ -203,7 +310,7 @@ exports.searchUser = async (req, res) => {
         { userName: { $regex: query, $options: "i" } },
         { email: { $regex: query, $options: "i" } },
       ],
-    });
+    }).select("-password -pendingFollowRequests");
     res.status(200).json({ msg: "Searched !", users });
   } catch (err) {
     res.status(400).json({ msg: "Error in searchUser !", err: err.message });

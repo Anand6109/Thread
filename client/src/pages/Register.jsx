@@ -54,9 +54,8 @@ const Register = () => {
         theme: "colored",
         transition: Bounce,
       });
-      // Wait a moment for the page to update with new auth state
       setTimeout(() => {
-        window.location.reload();
+        window.location.replace("/");
       }, 1500);
     }
     if (signinUserData.isError) {
@@ -85,9 +84,8 @@ const Register = () => {
         theme: "colored",
         transition: Bounce,
       });
-      // Wait a moment for the page to update with new auth state
       setTimeout(() => {
-        window.location.reload();
+        window.location.replace("/");
       }, 1500);
     }
     if (loginUserData.isError) {
