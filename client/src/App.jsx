@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -22,7 +22,15 @@ const SinglePost = lazy(() => import("./pages/Protected/SinglePost"));
 
 const App = () => {
   const { darkMode } = useSelector((state) => state.service);
-  const { data, isError } = useMyInfoQuery();
+  const { data, isError, isLoading } = useMyInfoQuery();
+
+  if (isLoading) {
+    return (
+      <Stack height="100vh" alignItems="center" justifyContent="center">
+        <Loading />
+      </Stack>
+    );
+  }
 
   if (isError || !data) {
     return (

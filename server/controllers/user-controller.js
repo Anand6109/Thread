@@ -10,6 +10,14 @@ const {
 } = require("../utils/multipart-form");
 const logError = require("../utils/log-error");
 
+const isProduction =
+  process.env.NODE_ENV === "production" || process.env.RENDER === "true";
+const authCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+};
+
 exports.signin = async (req, res) => {
   try {
     const { userName, password } = req.body;
@@ -60,11 +68,8 @@ exports.signin = async (req, res) => {
       return res.status(400).json({ msg: "Error while generating token !" });
     }
     res.cookie("token", accesToken, {
+      ...authCookieOptions,
       maxAge: 1000 * 60 * 60 * 24 * 30,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      // partitioned: true,
     });
     res
       .status(201)
@@ -103,11 +108,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: "Token not gemnerated in login !" });
     }
     res.cookie("token", accessToken, {
+      ...authCookieOptions,
       maxAge: 1000 * 60 * 60 * 24 * 30,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      // partitioned: true,
     });
     res.status(200).json({ msg: "User logged in succcessfully !" });
   } catch (err) {
@@ -434,11 +436,8 @@ exports.searchUser = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     res.cookie("token", "", {
+      ...authCookieOptions,
       maxAge: 0,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      // partitioned: true,
     });
 
     res.status(201).json({ msg: `You have been logged out! ${req.user.userName}` });
