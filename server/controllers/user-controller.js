@@ -21,13 +21,16 @@ exports.signin = async (req, res) => {
       userName.trim().length > 32 ||
       !email ||
       email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       typeof password !== "string" ||
       password.length < 8 ||
       Buffer.byteLength(password, "utf8") > 72
     ) {
       return res
         .status(400)
-        .json({ msg: "Enter a username, valid email, and password of 8-72 bytes !" });
+        .json({
+          msg: "Use a username of 1-32 characters, a valid email address, and a password of at least 8 characters and at most 72 UTF-8 bytes.",
+        });
     }
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -40,7 +43,7 @@ exports.signin = async (req, res) => {
       return res.status(400).json({ msg: "Error in password hashing !" });
     }
     const user = new User({
-      userName,
+      userName: userName.trim(),
       email,
       password: hashedPassword,
     });
