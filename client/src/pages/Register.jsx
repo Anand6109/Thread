@@ -24,6 +24,11 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const passwordBytes = new TextEncoder().encode(password).length;
+  const userNameIsValid =
+    userName.trim().length >= 1 && userName.trim().length <= 32;
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const passwordIsValid = password.length >= 8 && passwordBytes <= 72;
 
   const toggleLogin = () => {
     setLogin((pre) => !pre);
@@ -38,6 +43,18 @@ const Register = () => {
   };
 
   const handleRegister = async () => {
+    if (!userNameIsValid) {
+      toast.error("Username must be between 1 and 32 characters.");
+      return;
+    }
+    if (!emailIsValid) {
+      toast.error("Enter a valid email address.");
+      return;
+    }
+    if (!passwordIsValid) {
+      toast.error("Password must be at least 8 characters and at most 72 UTF-8 bytes.");
+      return;
+    }
     const data = {
       userName,
       email,
@@ -63,16 +80,20 @@ const Register = () => {
       }, 1500);
     }
     if (signinUserData.isError) {
-      toast.error(signinUserData.error?.data?.msg || "Could not create your account.", {
-        position: "top-center",
-        autoClose: 2500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-        transition: Bounce,
-      });
+      toast.error(
+        signinUserData.error?.data?.msg ||
+          "Could not reach the server. Check your connection and try again.",
+        {
+          position: "top-center",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+          transition: Bounce,
+        }
+      );
     }
   }, [
     signinUserData.isSuccess,
@@ -160,20 +181,37 @@ const Register = () => {
             <TextField
               variant="outlined"
               placeholder="Enter your userName..."
+              value={userName}
               onChange={(e) => setUserName(e.target.value)}
+              error={userName.length > 0 && !userNameIsValid}
+              helperText="Required; 1-32 characters."
+              inputProps={{ maxLength: 32 }}
+              autoComplete="username"
             />
           )}
           <TextField
             variant="outlined"
             placeholder="Enter your Email..."
+            type="email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={email.length > 0 && !emailIsValid}
+            helperText="Enter a valid email address."
+            autoComplete="email"
           />
           <TextField
             variant="outlined"
             placeholder="Enter your Password..."
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             type={showPassword ? "text" : "password"}
             autoComplete={login ? "current-password" : "new-password"}
+            error={!login && password.length > 0 && !passwordIsValid}
+            helperText={
+              login
+                ? undefined
+                : `${password.length >= 8 ? "Minimum length met" : "At least 8 characters"} · ${passwordBytes}/72 UTF-8 bytes`
+            }
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
