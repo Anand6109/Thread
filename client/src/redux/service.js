@@ -7,8 +7,11 @@ import {
   deleteThePost,
 } from "./slice";
 
+const serverUrl =
+  import.meta.env.VITE_SERVER_URL?.replace(/\/+$/, "") || "http://localhost:5000";
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${import.meta.env.VITE_SERVER_URL || "http://localhost:5000"}/api/`,
+  baseUrl: `${serverUrl}/api/`,
   credentials: "include",
 });
 

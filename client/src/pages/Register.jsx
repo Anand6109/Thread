@@ -184,7 +184,6 @@ const Register = () => {
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               error={userName.length > 0 && !userNameIsValid}
-              helperText="Required; 1-32 characters."
               inputProps={{ maxLength: 32 }}
               autoComplete="username"
             />
@@ -196,7 +195,6 @@ const Register = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={email.length > 0 && !emailIsValid}
-            helperText="Enter a valid email address."
             autoComplete="email"
           />
           <TextField
@@ -207,11 +205,6 @@ const Register = () => {
             type={showPassword ? "text" : "password"}
             autoComplete={login ? "current-password" : "new-password"}
             error={!login && password.length > 0 && !passwordIsValid}
-            helperText={
-              login
-                ? undefined
-                : `${password.length >= 8 ? "Minimum length met" : "At least 8 characters"} · ${passwordBytes}/72 UTF-8 bytes`
-            }
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
